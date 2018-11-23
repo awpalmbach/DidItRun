@@ -32,7 +32,7 @@ preferences {
 	}
 	
 	section {
-    	input(name: "switch", type: "capability.switch", title: "Use This Virtual Switch", required: true, multiple: false, description: null)
+    	input(name: "switch1", type: "capability.switch", title: "Use This Virtual Switch", required: true, multiple: false, description: null)
     }
 	
 	  section("And notify me if it hasn't exceeded the threshold in more than this many minutes (default 10)") {
@@ -64,6 +64,7 @@ def updated() {
 
 def initialize() {
 	subscribe(meter, "power", meterHandler)
+
 }
 
 def meterHandler(evt) {
@@ -71,19 +72,24 @@ def meterHandler(evt) {
 	log.trace "meterHandler($evt.name: $evt.value)"
 
     def thresholdValue = threshold as int
+
+def switchState = switch1.currentState("switch")
+
+
     if (meterValue > thresholdValue) {
 	    log.debug "${meter} reported energy consumption above ${threshold}."
 		
-		if (switch.currentState("switch").value != "on" {
-			log.debug "${switch} not on. Turning on."
-			switch.on()
+		if (switchState.value != "on") {
+			log.debug "${switch1} not on. Turning on."
+			switch1.on()
 			unschedule(offTooLong)
 		}
+     }
 	else {
 		log.debug "${meter} reported energy consumption below ${threshold}."
-		if (switch.currentState("switch").value != "off" {
-			log.debug "${switch} not off. Turning off."
-			switch.off()
+		if (switchState.value != "off") {
+			log.debug "${switch1} not off. Turning off."
+			switch1.off()
 		}
 	}
 	
@@ -94,7 +100,7 @@ def meterHandler(evt) {
 
 
 def offTooLong() {
-  def switchState = switch.currentState("switch")
+  def switchState = switch1.currentState("switch")
   def freq = (frequency != null && frequency != "") ? frequency * 60 : 600
 
   if (switchState.value == "off") {
